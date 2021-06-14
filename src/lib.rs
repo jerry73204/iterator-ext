@@ -8,6 +8,7 @@ mod try_flat_map;
 mod try_flat_map_results;
 mod try_flatten;
 mod try_flatten_results;
+mod try_scan;
 
 pub use and_then::*;
 pub use map_err::*;
@@ -18,10 +19,58 @@ pub use try_flat_map::*;
 pub use try_flat_map_results::*;
 pub use try_flatten::*;
 pub use try_flatten_results::*;
+pub use try_scan::*;
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn try_scan_test_1() {
+        let input = vec![Ok(1usize), Ok(2), Err("err"), Ok(3)];
+        let output: Vec<_> = input
+            .into_iter()
+            .try_scan(0, |acc, val| {
+                *acc += val;
+                Ok(Some(*acc))
+            })
+            .collect();
+        assert_eq!(output, vec![Ok(1), Ok(3), Err("err")]);
+    }
+
+    #[test]
+    fn try_scan_test_2() {
+        let input = vec![Ok(1usize), Ok(2), Err("err"), Ok(3)];
+        let output: Vec<_> = input
+            .into_iter()
+            .try_scan(0, |acc, val| {
+                if val % 2 != 0 {
+                    *acc += val;
+                    Ok(Some(*acc))
+                } else {
+                    Ok(None)
+                }
+            })
+            .collect();
+        assert_eq!(output, vec![Ok(1)]);
+    }
+
+    #[test]
+    fn try_scan_test_3() {
+        let input = vec![Ok(1usize), Ok(3), Ok(2)];
+        let output: Vec<_> = input
+            .into_iter()
+            .try_scan(0, |acc, val| {
+                if val % 2 != 0 {
+                    *acc += val;
+                    Ok(Some(*acc))
+                } else {
+                    Err("found even")
+                }
+            })
+            .collect();
+        assert_eq!(output, vec![Ok(1), Ok(4), Err("found even")]);
+    }
 
     #[test]
     fn try_flatten_test() {

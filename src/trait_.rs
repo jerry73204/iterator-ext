@@ -1,11 +1,24 @@
 use crate::{
     and_then::AndThen, map_err::MapErr, try_filter::TryFilter, try_filter_map::TryFilterMap,
     try_flat_map::TryFlatMap, try_flat_map_results::TryFlatMapResults, try_flatten::TryFlatten,
-    try_flatten_results::TryFlattenResults,
+    try_flatten_results::TryFlattenResults, try_scan::TryScan,
 };
 
 /// An extension trait to [Iterator]
 pub trait IteratorExt {
+    /// A fallible iterator adaptor analogous to [scan](Iterator::scan) from [Iterator](Iterator).
+    fn try_scan<St, F, T, U, E>(self, init: St, f: F) -> TryScan<Self, St, F>
+    where
+        Self: Sized + Iterator<Item = Result<T, E>>,
+        F: FnMut(&mut St, T) -> Result<Option<U>, E>,
+    {
+        TryScan {
+            iter: Some(self),
+            state: init,
+            f,
+        }
+    }
+
     /// Creates a fallible iterator that works like map, but flattens nested structure.
     fn try_flat_map<F, T, U, V, E>(self, f: F) -> TryFlatMap<Self, F, U::IntoIter>
     where
