@@ -1,16 +1,16 @@
 use crate::common::*;
 
 #[derive(Debug)]
-pub struct TryFlatten<I, J> {
+pub struct TryFlattenResults<I, J> {
     pub(super) iter: Option<I>,
     pub(super) sub_iter: Option<J>,
 }
 
-impl<I, J, T, U, E> Iterator for TryFlatten<I, J>
+impl<I, J, T, U, E> Iterator for TryFlattenResults<I, J>
 where
     I: Iterator<Item = Result<T, E>>,
-    J: Iterator<Item = U>,
-    T: IntoIterator<Item = U, IntoIter = J>,
+    J: Iterator<Item = Result<U, E>>,
+    T: IntoIterator<Item = Result<U, E>, IntoIter = J>,
 {
     type Item = Result<U, E>;
 
@@ -38,10 +38,13 @@ where
 
         loop {
             match sub_iter.next() {
-                Some(item) => {
+                Some(Ok(item)) => {
                     self.iter = Some(iter);
                     self.sub_iter = Some(sub_iter);
                     return Some(Ok(item));
+                }
+                Some(Err(err)) => {
+                    return Some(Err(err));
                 }
                 None => {
                     let item = match iter.next() {

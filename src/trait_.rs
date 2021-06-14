@@ -1,6 +1,7 @@
 use crate::{
     and_then::AndThen, map_err::MapErr, try_filter::TryFilter, try_filter_map::TryFilterMap,
-    try_flat_map::TryFlatMap, try_flatten::TryFlatten,
+    try_flat_map::TryFlatMap, try_flat_map_results::TryFlatMapResults, try_flatten::TryFlatten,
+    try_flatten_results::TryFlattenResults,
 };
 
 /// An extension trait to [Iterator]
@@ -10,7 +11,7 @@ pub trait IteratorExt {
     where
         Self: Sized + Iterator<Item = Result<T, E>>,
         F: FnMut(T) -> Result<U, E>,
-        U: IntoIterator<Item = Result<V, E>>,
+        U: IntoIterator<Item = V>,
     {
         TryFlatMap {
             iter: Some(self),
@@ -23,9 +24,35 @@ pub trait IteratorExt {
     fn try_flatten<T, U, E>(self) -> TryFlatten<Self, T::IntoIter>
     where
         Self: Sized + Iterator<Item = Result<T, E>>,
-        T: IntoIterator<Item = Result<U, E>>,
+        T: IntoIterator<Item = U>,
     {
         TryFlatten {
+            iter: Some(self),
+            sub_iter: None,
+        }
+    }
+
+    /// Creates a fallible iterator that works like map, but flattens nested structure.
+    fn try_flat_map_results<F, T, U, V, E>(self, f: F) -> TryFlatMapResults<Self, F, U::IntoIter>
+    where
+        Self: Sized + Iterator<Item = Result<T, E>>,
+        F: FnMut(T) -> Result<U, E>,
+        U: IntoIterator<Item = Result<V, E>>,
+    {
+        TryFlatMapResults {
+            iter: Some(self),
+            sub_iter: None,
+            f,
+        }
+    }
+
+    /// Creates a fallible iterator that flattens nested structure.
+    fn try_flatten_results<T, U, E>(self) -> TryFlattenResults<Self, T::IntoIter>
+    where
+        Self: Sized + Iterator<Item = Result<T, E>>,
+        T: IntoIterator<Item = Result<U, E>>,
+    {
+        TryFlattenResults {
             iter: Some(self),
             sub_iter: None,
         }

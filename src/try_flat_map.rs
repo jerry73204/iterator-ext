@@ -10,9 +10,9 @@ pub struct TryFlatMap<I, F, J> {
 impl<I, F, J, T, U, V, E> Iterator for TryFlatMap<I, F, J>
 where
     I: Iterator<Item = Result<T, E>>,
-    J: Iterator<Item = Result<V, E>>,
+    J: Iterator<Item = V>,
     F: FnMut(T) -> Result<U, E>,
-    U: IntoIterator<Item = Result<V, E>, IntoIter = J>,
+    U: IntoIterator<Item = V, IntoIter = J>,
 {
     type Item = Result<V, E>;
 
@@ -44,13 +44,10 @@ where
 
         loop {
             match sub_iter.next() {
-                Some(Ok(item)) => {
+                Some(item) => {
                     self.iter = Some(iter);
                     self.sub_iter = Some(sub_iter);
                     return Some(Ok(item));
-                }
-                Some(Err(err)) => {
-                    return Some(Err(err));
                 }
                 None => {
                     let item = match iter.next() {
