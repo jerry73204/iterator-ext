@@ -32,7 +32,7 @@ pub trait IteratorExt {
         }
     }
 
-    /// Creates a fallible iterator that works like map, but flattens nested structure.
+    /// Similar to [try_flat_map](IteratorExt::try_flat_map), but flattens nested results.
     fn try_flat_map_results<F, T, U, V, E>(self, f: F) -> TryFlatMapResults<Self, F, U::IntoIter>
     where
         Self: Sized + Iterator<Item = Result<T, E>>,
@@ -46,7 +46,7 @@ pub trait IteratorExt {
         }
     }
 
-    /// Creates a fallible iterator that flattens nested structure.
+    /// Similar to [try_flatten](IteratorExt::try_flatten), but flattens nested results.
     fn try_flatten_results<T, U, E>(self) -> TryFlattenResults<Self, T::IntoIter>
     where
         Self: Sized + Iterator<Item = Result<T, E>>,
